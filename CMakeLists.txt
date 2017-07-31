@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(KalmanFilter)
+project(KalmanFilters)
 
 set(CMAKE_CXX_FLAGS "-std=gnu++11 -fpermissive ${CMAKE_CXX_FLAGS} -Wfatal-errors -Wno-write-strings")
 
