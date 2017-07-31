@@ -35,9 +35,7 @@ public:
    * \param dim_state is the dimension of state vector
   */
   ExtendedKalmanFilter(uint dim_in, uint dim_out, uint dim_state) :
-    KalmanFilter(dim_in, dim_out, dim_state),
-    W_(arma::eye(n_, n_)),
-    V_(arma::eye(m_, m_))
+    KalmanFilter(dim_in, dim_out, dim_state)
   {}
 
   /** \brief Constructor with given state-space matrices
@@ -51,9 +49,7 @@ public:
    * \param C is the output matrix
   */
   ExtendedKalmanFilter(const arma::mat& A, const arma::mat& B, const arma::mat& C) :
-    KalmanFilter(A, B, C),
-    W_(arma::eye(n_, n_)),
-    V_(arma::eye(m_, m_))
+    KalmanFilter(A, B, C)
   {}
 
   /** \brief Constructor with given state-space vectors
@@ -68,9 +64,7 @@ public:
    * \param q is the state vector
   */
   ExtendedKalmanFilter(const arma::vec& u, const arma::vec& y, const arma::vec& q) :
-    KalmanFilter(u, y, q),
-    W_(arma::eye(n_, n_)),
-    V_(arma::eye(m_, m_))
+    KalmanFilter(u, y, q)
   {}
 
 
@@ -110,52 +104,26 @@ public:
     outputJacobian_ = outputJacobian;
   }
 
-  /** \brief Process error Jacobian setter
-   *
-   * \param W is the process error Jacobian with dimensions n x n
-   * \throws std::length_error if the input matrix dimensions are different than
-   *                           initially provided dimensions
-  */
-  void setProcessErrorJacobian(const arma::mat W) {
-    if (arma::size(W) != arma::size(W_))
-      throw std::length_error("Incorrect dimensions");
-    else
-      W_ = W;
-  }
-
-  /** \brief Output error Jacobian setter
-   *
-   * \param V is the output error Jacobian with dimensions m x m
-   * \throws std::length_error if the input matrix dimensions are different than
-   *                           initially provided dimensions
-  */
-  void setOutputErrorJacobian(const arma::mat V) {
-    if (arma::size(V) != arma::size(V_))
-      throw std::length_error("Incorrect dimensions");
-    else
-      V_ = V;
-  }
 
   /** \brief Performs the EKF prediction step
     *
     * Calculates the state evolution for the current time step based on previous
     * state estimate and input. Updates the process Jacobian and estimate error
-    * covariance matrix based on given and process error Jacobian.
+    * covariance matrix.
     *
     * \sa processFunction(), processJacobian_()
    */
   virtual void predictState() {
     q_pred_ = processFunction_(q_est_, u_);
     A_ = processJacobian_(q_est_, u_);
-    P_ = A_ * P_ * trans(A_) + W_ * Q_ * trans(W_);
+    P_ = A_ * P_ * trans(A_) + Q_;
   }
 
   /** \brief Performs the EKF prediction step given the input vector
    *
    * Sets provided input vector, calculates the state evolution for the current
    * time step based on previous state estimate and input. Updates the process
-   * Jacobian and estimate error covariance matrix based on given and process
-   * error Jacobian.
+   * Jacobian and estimate error covariance matrix.
    *
    * \param u is the input vector with dimension l
    * \sa KalmanFilter::setInput(), processFunction_(), processJacobian_()
@@ -175,7 +143,7 @@ public:
   */
   virtual void correctState() {
     C_ = outputJacobian_(q_est_);
-    S_ = C_ * P_ * trans(C_) + V_ * R_ * trans(V_);
+    S_ = C_ * P_ * trans(C_) + R_;
     K_ = P_ * trans(C_) * inv(S_);
     q_est_ = q_pred_ + K_ * (y_ - outputFunction_(q_pred_));
     P_ = (I_ - K_ * C_) * P_;
@@ -187,7 +155,7 @@ public:
    * state prediction to obtain new state estimate, and updates estimate error
    * covariance as well as innovation covariance.
    *
-   * \sa outputFunction_(), outputJacobian_()
+   * \sa KalmanFilter::setOutput(), outputFunction_(), outputJacobian_()
   */
   void correctState(const arma::vec& y) {
     setOutput(y);
@@ -269,9 +237,6 @@ protected:
    * \sa outputFunction_(), setOutputFunction()
   */
   std::function<arma::mat(arma::vec q)> outputJacobian_;
-
-  arma::mat W_;     /**< \brief Process error Jacobian with dimensions n x n */
-  arma::mat V_;     /**< \brief Output error Jacobian with dimensions m x m */
 };
 
 } // namespace kf
