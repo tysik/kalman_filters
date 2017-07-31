@@ -281,8 +281,8 @@ public:
 
   /** \brief Performs the KF prediction step
    *
-   * Calulates the state predicted from the model and updates the estimate error
-   * covariance matrix.
+   * Calculates the state predicted from the model and updates the estimate
+   * error covariance matrix.
   */
   virtual void predictState() {
     q_pred_ = A_ * q_est_ + B_ * u_;
@@ -291,8 +291,8 @@ public:
 
   /** \brief Performs the KF prediction step given input u
    *
-   * Sets provided input vector and calulates the state predicted from the model
-   * and updates the estimate error covariance matrix.
+   * Sets provided input vector and calculates the state predicted from the
+   * model and updates the estimate error covariance matrix.
    *
    * \param u is the input vector
    * \sa setInput(), predictState()
@@ -304,7 +304,7 @@ public:
 
   /** \brief Performs the KF correction step
    *
-   * Calulates the new Kalman gain, corrects the state prediction to obtain new
+   * Calculates the new Kalman gain, corrects the state prediction to obtain new
    * state estimate, and updates estimate error covariance as well as innovation
    * covariance.
   */
@@ -317,9 +317,9 @@ public:
 
   /** \brief Performs the KF correction step given output y
    *
-   * Sets provided output vector and calulates the new Kalman gain. Corrects the
-   * state prediction to obtain new state estimate, and updates estimate error
-   * covariance as well as innovation covariance.
+   * Sets provided output vector and calculates the new Kalman gain. Corrects
+   * the state prediction to obtain new state estimate, and updates estimate
+   * error covariance as well as innovation covariance.
    *
    * \param y is the output vector
    * \sa setOutput(), correctState()
