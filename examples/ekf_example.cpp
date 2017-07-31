@@ -159,9 +159,9 @@ int main() {
   }
 
   // Plot
-  plt::title("Estimate of position");
+  plt::title("Estimate of angle");
   plt::xlabel("Time [s]");
-  plt::ylabel("Position [m]");
+  plt::ylabel("Angle [rad]");
   plt::named_plot("Truth", time, true_ang, "--");
   plt::named_plot("Measure", time, measured_ang, "-");
   plt::named_plot("Estimate", time, estimated_ang, "-");
