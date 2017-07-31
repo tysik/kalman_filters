@@ -1,3 +1,17 @@
+/*
+ * In this example we show how to estimate the position of a 1D moving object
+ * given measurements of its position and control signals in a form of object
+ * acceleration. Both measurement and control signals are noisy. The
+ * measurements are obtained with ten times smaller rate than the system.
+ *
+ * The state of the system is q = (p, v) (position and velocity): n = 2
+ * The input of the system is u = a (acceleration): l = 1
+ * The output of the system is p (position): m = 1
+ *
+ * The system is described with equation q(k) = A * q(k-1) + B * u(k-1)
+ * The output is described with equation y(k) = C * q(k)
+ */
+
 #include <iostream>
 #include <vector>
 #include <random>
@@ -42,7 +56,7 @@ int main() {
   normal_distribution<double> measurement_noise(measurement_mu, measurement_sigma);
   normal_distribution<double> process_noise(process_mu, process_sigma);
 
-  // Linear system: 1 input (acceleration), 1 output (position), 2 states (position and speed)
+  // Preparing KF
   mat A = { {1.0, system_dt},
             {0.0, 1.0      } };
 

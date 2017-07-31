@@ -1,3 +1,13 @@
+/*
+ * In this example we show how to estimate the angle of a pendulum attached to
+ * a frame moving in vertical direction. The length of the pendulum is "d", the
+ * mass (concentrated at pendulum end point) of the frame is "m", the
+ *
+ * The state of the system is q = (phi, omega) (angle and angular velocity): n = 2
+ * The input of the system is u = (a) (linear acceleration pointing up): l = 1
+ * The output of the system is y = (a, b) (position of the
+ */
+
 #include <iostream>
 #include <vector>
 #include <random>
@@ -22,7 +32,7 @@ int M = static_cast<int>(measurement_dt / system_dt);
 // Process constants
 const double m = 1.0;   // Mass in kg
 const double g = 9.8;   // Gravitational accel.
-const double l = 1.0;   // Length in m
+const double d = 1.0;   // Length in m
 const double b = 0.5;   // Friction coef. in 1/s
 
 vec processFunction(vec q, vec u) {
@@ -30,7 +40,7 @@ vec processFunction(vec q, vec u) {
   vec q_pred = vec(2).zeros();
 
   q_pred(0) = q(0) + q(1) * system_dt;
-  q_pred(1) = q(1) + (m * (g + u(0)) * l * sin(q(0)) - b * q(1)) * system_dt / (m * l * l);
+  q_pred(1) = q(1) + (m * (g + u(0)) * d * sin(q(0)) - b * q(1)) * system_dt / (m * d * d);
 
   return q_pred;
 }
@@ -39,8 +49,8 @@ vec outputFunction(vec q) {
   // We measure position (x,y) of the end point
   vec y = vec(2).zeros();
 
-  y(0) = l * sin(q(0));
-  y(1) = l * cos(q(0));
+  y(0) = d * sin(q(0));
+  y(1) = d * cos(q(0));
 
   return y;
 }
@@ -130,10 +140,10 @@ int main() {
 
     // First we need to recalculate Jacobians for the new step
     mat A = { {1.0, system_dt},
-              {(g + believed_acc[i]) * cos(estimated_ang[i - 1]) * system_dt / l, 1.0 - b * system_dt / (m * l * l)} };
+              {(g + believed_acc[i]) * cos(estimated_ang[i - 1]) * system_dt / d, 1.0 - b * system_dt / (m * d * d)} };
 
-    mat C = { { l * cos(estimated_ang[i - 1]), 0.0},
-              {-l * sin(estimated_ang[i - 1]), 0.0} };
+    mat C = { { d * cos(estimated_ang[i - 1]), 0.0},
+              {-d * sin(estimated_ang[i - 1]), 0.0} };
 
     ekf.setStateMatrix(A);
     ekf.setOutputMatrix(C);
