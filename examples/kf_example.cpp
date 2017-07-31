@@ -118,8 +118,8 @@ int main() {
   plt::grid(true);
   plt::fill_between(time, vector<double>(N, 0), true_pos, {{string("visible"), string("true")}, {string("alpha"), string("0.4")}});
   plt::xlim(0.0, simulation_time - system_dt);
+  plt::save("./kf_result.png");
   plt::show();
-  //plt::save("./kf_result.png");
 
   return 0;
 }

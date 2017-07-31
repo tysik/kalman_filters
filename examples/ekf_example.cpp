@@ -1,9 +1,11 @@
 /*
  * In this example we show how to estimate the angle of a pendulum attached to
  * a frame moving in vertical direction. The length of the pendulum is "d", the
- * mass (concentrated at pendulum end point) of the frame is "m", the
+ * mass (concentrated at pendulum end point) of the frame is "m", the gravity
+ * acceleration is "g" and there is a friction coefficient "b" at the bearing.
  *
- * The state of the system is q = (phi, omega) (angle and angular velocity): n = 2
+ * The state of the system is q = (phi, omega) (angle and angular velocity):
+ * n = 2
  * The input of the system is u = (a) (linear acceleration pointing up): l = 1
  * The output of the system is y = (a, b) (position of the
  */
@@ -23,7 +25,7 @@ using namespace kf;
 
 // Time and samples
 const double system_dt = 0.01;
-const double measurement_dt = 0.1;
+const double measurement_dt = 0.05;
 const double simulation_time = 10.0;
 
 int N = static_cast<int>(simulation_time / system_dt);
@@ -36,17 +38,16 @@ const double d = 1.0;   // Length in m
 const double b = 0.5;   // Friction coef. in 1/s
 
 vec processFunction(vec q, vec u) {
-  // Pendulum movable in vertical direction with acceleration u.
   vec q_pred = vec(2).zeros();
 
   q_pred(0) = q(0) + q(1) * system_dt;
-  q_pred(1) = q(1) + (m * (g + u(0)) * d * sin(q(0)) - b * q(1)) * system_dt / (m * d * d);
+  q_pred(1) = q(1) + (m * (g + u(0)) * d * sin(q(0)) - b * q(1)) * system_dt /
+              (m * d * d);
 
   return q_pred;
 }
 
 vec outputFunction(vec q) {
-  // We measure position (x,y) of the end point
   vec y = vec(2).zeros();
 
   y(0) = d * sin(q(0));
@@ -54,6 +55,22 @@ vec outputFunction(vec q) {
 
   return y;
 }
+
+mat processJacobian(vec q, vec u) {
+  double a11 = 1.0;
+  double a12 = system_dt;
+  double a21 = (g + u(0)) * cos(q(0)) * system_dt / d;
+  double a22 = 1.0 - b * system_dt / (m * d * d);
+
+  return { {a11, a12},
+           {a21, a22} };
+}
+
+mat outputJacobian(vec q) {
+  return { { d * cos(q(0)), 0.0},
+           {-d * sin(q(0)), 0.0} };
+}
+
 
 int main() {
   // Buffers for plots
@@ -79,17 +96,14 @@ int main() {
   normal_distribution<double> measurement_noise(measurement_mu, measurement_sigma);
   normal_distribution<double> process_noise(process_mu, process_sigma);
 
-  // Initial system:
-  // 1 input (acceleration), 2 outputs (x,y of endpoint), 2 states (position and speed)
+  // Preparing KF
   ExtendedKalmanFilter ekf(1, 2, 2);
+
   ekf.setProcessFunction(processFunction);
   ekf.setOutputFunction(outputFunction);
 
-  mat W = {{1.0, 0.0}, {0.0, 1.0}};
-  mat V = {{1.0, 0.0}, {0.0, 1.0}};
-
-  ekf.setProcessErrorJacobian(W);
-  ekf.setOutputErrorJacobian(V);
+  ekf.setProcessJacobian(processJacobian);
+  ekf.setOutputJacobian(outputJacobian);
 
   mat Q = {{0.001, 0.0}, {0.0, 0.001}};
   mat R = {{1.0, 0.0}, {0.0, 1.0}};
@@ -138,16 +152,6 @@ int main() {
       measured_ang[i] = measured_ang[i - 1];
     }
 
-    // First we need to recalculate Jacobians for the new step
-    mat A = { {1.0, system_dt},
-              {(g + believed_acc[i]) * cos(estimated_ang[i - 1]) * system_dt / d, 1.0 - b * system_dt / (m * d * d)} };
-
-    mat C = { { d * cos(estimated_ang[i - 1]), 0.0},
-              {-d * sin(estimated_ang[i - 1]), 0.0} };
-
-    ekf.setStateMatrix(A);
-    ekf.setOutputMatrix(C);
-
     // Here we do the magic
     ekf.updateState({believed_acc[i]}, measured_xy[i]);
 
@@ -165,8 +169,8 @@ int main() {
   plt::grid(true);
   plt::fill_between(time, vector<double>(N, 0), true_ang, {{string("visible"), string("true")}, {string("alpha"), string("0.4")}});
   plt::xlim(0.0, simulation_time - system_dt);
+  plt::save("./ekf_result.png");
   plt::show();
-  //plt::save("./ekf_result.png");
 
   return 0;
 }
