@@ -8,8 +8,16 @@ namespace kf {
 /** \class KalmanFilter kalman_filter.h
  * \brief Class containing functionality of Kalman filter.
  *
- * Class containing functionality of Kalman filter. Both prediction and
- * correction steps can be invoked separately.
+ * The process is described with equation q(k) = A * q(k-1) + B * q(k-1)
+ * The output is described with equation y(k) = C * q(k)
+ *
+ * Throughout the description "n" denotes dimension of state vector q, "m"
+ * denotes dimension of output vector y (measured values), and "l" denotes
+ * dimension of input vector u (control signals). Both prediction and correction
+ * steps can be invoked separately.
+ *
+ * The class exploits Armadillo library for matrix operations and can throw any
+ * of its exceptions (cf. www.arma.sourceforge.net).
 */
 class KalmanFilter
 {
@@ -21,9 +29,9 @@ public:
    * are initialized with ones on diagonal. The rest of data is zero-value
    * initialized.
    *
-   * \param dim_in the dimension of input vector (number of control signals)
-   * \param dim_out the dimension of output vector (number of measurements)
-   * \param dim_state the dimension of state vector
+   * \param dim_in is the dimension of input vector (number of control signals)
+   * \param dim_out is the dimension of output vector (number of measurements)
+   * \param dim_state is the dimension of state vector
   */
   KalmanFilter(uint dim_in, uint dim_out, uint dim_state) :
     l_(dim_in),
@@ -55,9 +63,9 @@ public:
    * All covariance matrices are initialized with ones on diagonal. The rest
    * of data is zero-value initialized.
    *
-   * \param A the state matrix
-   * \param B the input matrix
-   * \param C the output matrix
+   * \param A is the state matrix
+   * \param B is the input matrix
+   * \param C is the output matrix
   */
   KalmanFilter(const arma::mat& A, const arma::mat& B, const arma::mat& C) :
     KalmanFilter(B.n_cols, C.n_rows, A.n_rows)
@@ -75,9 +83,9 @@ public:
    * All covariance matrices are initialized with ones on diagonal. The rest
    * of data is zero-value initialized.
    *
-   * \param u the input vector
-   * \param y the output vector
-   * \param q the state vector
+   * \param u is the input vector
+   * \param y is the output vector
+   * \param q is the state vector
   */
   KalmanFilter(const arma::vec& u, const arma::vec& y, const arma::mat& q) :
     KalmanFilter(u.n_elem, y.n_elem, q.n_elem)
@@ -89,6 +97,12 @@ public:
   }
 
 
+  /** \brief State matrix setter
+   *
+   * \param A is the state matrix with dimension n x n
+   * \throws std::length_error if the input matrix dimensions are different than
+   *                           initially provided dimensions
+  */
   void setStateMatrix(const arma::mat& A) {
     if (arma::size(A) != arma::size(A_))
       throw std::length_error("Incorrect dimensions");
@@ -96,6 +110,12 @@ public:
       A_ = A;
   }
 
+  /** \brief Input matrix setter
+   *
+   * \param B is the input matrix with dimension n x l
+   * \throws std::length_error if the input matrix dimensions are different than
+   *                           initially provided dimensions
+  */
   void setInputMatrix(const arma::mat& B) {
     if (arma::size(B) != arma::size(B_))
       throw std::length_error("Incorrect dimensions");
@@ -103,6 +123,12 @@ public:
       B_ = B;
   }
 
+  /** \brief Output matrix setter
+   *
+   * \param C is the output matrix with dimension m x n
+   * \throws std::length_error if the input matrix dimensions are different than
+   *                           initially provided dimensions
+  */
   void setOutputMatrix(const arma::mat& C) {
     if (arma::size(C) != arma::size(C_))
       throw std::length_error("Incorrect dimensions");
@@ -110,6 +136,12 @@ public:
       C_ = C;
   }
 
+  /** \brief Estimate covariance matrix setter
+   *
+   * \param P is the estimate covariance matrix with dimension n x n
+   * \throws std::length_error if the input matrix dimensions are different than
+   *                           initially provided dimensions
+  */
   void setEstimateCovariance(const arma::mat& P) {
     if (arma::size(P) != arma::size(P_))
       throw std::length_error("Incorrect dimensions");
@@ -117,6 +149,12 @@ public:
       P_ = P;
   }
 
+  /** \brief Process covariance matrix setter
+   *
+   * \param Q is the process covariance matrix with dimension n x n
+   * \throws std::length_error if the input matrix dimensions are different than
+   *                           initially provided dimensions
+  */
   void setProcessCovariance(const arma::mat& Q) {
     if (arma::size(Q) != arma::size(Q_))
       throw std::length_error("Incorrect dimensions");
@@ -124,6 +162,12 @@ public:
       Q_ = Q;
   }
 
+  /** \brief Output covariance matrix setter
+   *
+   * \param R is the output covariance matrix with dimension m x m
+   * \throws std::length_error if the input matrix dimensions are different than
+   *                           initially provided dimensions
+  */
   void setOutputCovariance(const arma::mat& R) {
     if (arma::size(R) != arma::size(R_))
       throw std::length_error("Incorrect dimensions");
@@ -132,6 +176,12 @@ public:
   }
 
 
+  /** \brief Input vector setter
+   *
+   * \param u is the input vector with dimension l
+   * \throws std::length_error if the input matrix dimensions are different than
+   *                           initially provided dimensions
+  */
   void setInput(const arma::vec& u) {
     if (arma::size(u) != arma::size(u_))
       throw std::length_error("Incorrect dimensions");
@@ -139,6 +189,12 @@ public:
       u_ = u;
   }
 
+  /** \brief Output vector setter
+   *
+   * \param y is the output vector with dimension m
+   * \throws std::length_error if the input matrix dimensions are different than
+   *                           initially provided dimensions
+  */
   void setOutput(const arma::vec& y) {
     if (arma::size(y) != arma::size(y_))
       throw std::length_error("Incorrect dimensions");
@@ -146,6 +202,12 @@ public:
       y_ = y;
   }
 
+  /** \brief Predicted state vector setter
+   *
+   * \param q_pred is the predicted state vector with dimension n
+   * \throws std::length_error if the input matrix dimensions are different than
+   *                           initially provided dimensions
+  */
   void setPrediction(const arma::vec& q_pred) {
     if (arma::size(q_pred) != arma::size(q_pred_))
       throw std::length_error("Incorrect dimensions");
@@ -153,6 +215,12 @@ public:
       q_pred_ = q_pred;
   }
 
+  /** \brief Estimated state vector setter
+   *
+   * \param q_est is the estimated state vector with dimension n
+   * \throws std::length_error if the input matrix dimensions are different than
+   *                           initially provided dimensions
+  */
   void setEstimate(const arma::vec& q_est) {
     if (arma::size(q_est) != arma::size(q_est_))
       throw std::length_error("Incorrect dimensions");
@@ -161,36 +229,69 @@ public:
   }
 
 
+  /** \brief Estimate covariance matrix getter
+   *
+   * \returns the latest estimate covariance matrix P
+  */
   const arma::mat& getEstimateCovariance() const { return P_; }
 
+  /** \brief Innovation covariance matrix getter
+   *
+   * Innovation covariance matrix is calculated during correction step
+   * S = C * P * trans(C) + R.
+   *
+   * \returns the latest innovation covariance matrix S
+  */
   const arma::mat& getInnovationCovariance() const { return S_; }
 
+  /** \brief Kalman gain getter
+   *
+   * Kalman gain is calculated during correction step K = P * trans(C) * inv(S).
+   *
+   * \returns the latest Kalman gain K
+  */
   const arma::mat& getKalmanGain() const { return K_; }
 
 
+  /** \brief Input vector getter
+   *
+   * \returns the latest input vector u
+  */
   const arma::vec& getInput() const { return u_; }
 
+  /** \brief Output vector getter
+   *
+   * \returns the latest output vector y
+  */
   const arma::vec& getOutput() const { return y_; }
 
+  /** \brief Predicted state vector getter
+   *
+   * \returns the latest predicted state vector q_pred
+  */
   const arma::vec& getPrediction() const { return q_pred_; }
 
+  /** \brief Estimated state vector getter
+   *
+   * \returns the latest estimated state vector q_est
+  */
   const arma::vec& getEstimate() const { return q_est_; }
 
 
-  /** \brief Performs the KF prediction step.
+  /** \brief Performs the KF prediction step
    *
-   * Performs the KF prediction step: calulates the state predicted from the
-   * model and updates the estimate error covariance matrix.
+   * Calulates the state predicted from the model and updates the estimate error
+   * covariance matrix.
   */
   virtual void predictState() {
     q_pred_ = A_ * q_est_ + B_ * u_;
     P_ = A_ * P_ * trans(A_) + Q_;
   }
 
-  /** \brief Performs the KF prediction step given input u.
+  /** \brief Performs the KF prediction step given input u
    *
-   * Performs the KF prediction step given input u: calulates the state
-   * predicted from the model and updates the estimate error covariance matrix.
+   * Sets provided input vector and calulates the state predicted from the model
+   * and updates the estimate error covariance matrix.
    *
    * \param u the input vector
    * \sa setInput(), predictState()
