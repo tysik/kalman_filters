@@ -6,9 +6,9 @@
 namespace kf {
 
 /** \class KalmanFilter kalman_filter.h
- * \brief Class containing functionality of Kalman filter.
+ * \brief Class containing functionality of the Kalman filter
  *
- * The process is described with equation q(k) = A * q(k-1) + B * q(k-1)
+ * The process is described with equation q(k) = A * q(k-1) + B * u(k-1)
  * The output is described with equation y(k) = C * q(k)
  *
  * Throughout the description "n" denotes dimension of state vector q, "m"
@@ -22,6 +22,7 @@ namespace kf {
 class KalmanFilter
 {
 public:
+
   /** \brief Constructor with given dimensions
    *
    * Constructor with given dimensions. Initializes all vectors and matrices to
@@ -99,7 +100,7 @@ public:
 
   /** \brief State matrix setter
    *
-   * \param A is the state matrix with dimension n x n
+   * \param A is the state matrix with dimensions n x n
    * \throws std::length_error if the input matrix dimensions are different than
    *                           initially provided dimensions
   */
@@ -112,7 +113,7 @@ public:
 
   /** \brief Input matrix setter
    *
-   * \param B is the input matrix with dimension n x l
+   * \param B is the input matrix with dimensions n x l
    * \throws std::length_error if the input matrix dimensions are different than
    *                           initially provided dimensions
   */
@@ -125,7 +126,7 @@ public:
 
   /** \brief Output matrix setter
    *
-   * \param C is the output matrix with dimension m x n
+   * \param C is the output matrix with dimensions m x n
    * \throws std::length_error if the input matrix dimensions are different than
    *                           initially provided dimensions
   */
@@ -138,7 +139,7 @@ public:
 
   /** \brief Estimate covariance matrix setter
    *
-   * \param P is the estimate covariance matrix with dimension n x n
+   * \param P is the estimate covariance matrix with dimensions n x n
    * \throws std::length_error if the input matrix dimensions are different than
    *                           initially provided dimensions
   */
@@ -151,7 +152,7 @@ public:
 
   /** \brief Process covariance matrix setter
    *
-   * \param Q is the process covariance matrix with dimension n x n
+   * \param Q is the process covariance matrix with dimensions n x n
    * \throws std::length_error if the input matrix dimensions are different than
    *                           initially provided dimensions
   */
@@ -164,7 +165,7 @@ public:
 
   /** \brief Output covariance matrix setter
    *
-   * \param R is the output covariance matrix with dimension m x m
+   * \param R is the output covariance matrix with dimensions m x m
    * \throws std::length_error if the input matrix dimensions are different than
    *                           initially provided dimensions
   */
@@ -293,7 +294,7 @@ public:
    * Sets provided input vector and calulates the state predicted from the model
    * and updates the estimate error covariance matrix.
    *
-   * \param u the input vector
+   * \param u is the input vector
    * \sa setInput(), predictState()
   */
   virtual void predictState(const arma::vec& u) {
@@ -301,11 +302,11 @@ public:
     predictState();
   }
 
-  /** \brief Performs the KF correction step.
+  /** \brief Performs the KF correction step
    *
-   * Performs the KF correction step: calulates the new Kalman gain, corrects
-   * the state prediction to obtain new state estimate, and updates estimate
-   * error covariance as well as innovation covariance.
+   * Calulates the new Kalman gain, corrects the state prediction to obtain new
+   * state estimate, and updates estimate error covariance as well as innovation
+   * covariance.
   */
   virtual void correctState() {
     S_ = C_ * P_ * trans(C_) + R_;
@@ -314,13 +315,13 @@ public:
     P_ = (I_ - K_ * C_) * P_;
   }
 
-  /** \brief Performs the KF correction step given output y.
+  /** \brief Performs the KF correction step given output y
    *
-   * Performs the KF correction step given output y: calulates the new Kalman
-   * gain, corrects the state prediction to obtain new state estimate, and
-   * updates estimate error covariance as well as innovation covariance.
+   * Sets provided output vector and calulates the new Kalman gain. Corrects the
+   * state prediction to obtain new state estimate, and updates estimate error
+   * covariance as well as innovation covariance.
    *
-   * \param y the output (measurement) vector
+   * \param y is the output vector
    * \sa setOutput(), correctState()
   */
   void correctState(const arma::vec& y) {
@@ -328,24 +329,24 @@ public:
     correctState();
   }
 
-  /** \brief Performs the KF update.
+  /** \brief Performs the KF update
    *
-   * Performs the KF update, i.e. both prediction and correction steps.
+   * Executes both prediction and correction steps.
    *
-   * * \sa predictState(), correctState()
+   * \sa predictState(), correctState()
   */
   void updateState() {
     predictState();
     correctState();
   }
 
-  /** \brief Performs the KF update given input u and output y.
+  /** \brief Performs the KF update given input u and output y
    *
-   * Performs the KF update given input u and output y, i.e. sets the new values
-   * and executes both prediction and correction steps.
+   * Sets the new values of input and output vectors and executes both
+   * prediction and correction steps.
    *
-   * \param u the input vector
-   * \param y the output (measurement) vector
+   * \param u is the input vector
+   * \param y is the output (measurement) vector
    * \sa setInput(), setOutput(), predictState(), correctState()
   */
   void updateState(const arma::vec& u, const arma::vec& y) {
@@ -359,33 +360,38 @@ protected:
   KalmanFilter() {}
 
   // Dimensions:
-  uint l_;            /**< Dimension of input vector (number of control signals).
-                           Can be zero for autonomous systems. */
-  uint m_;            /**< Dimension of output vector (number of measured values) */
-  uint n_;            /**< Dimension of state vector */
+  uint l_;            /**< \brief Dimension of input vector (number of control
+                           signals). Can be zero for autonomous systems. */
+  uint m_;            /**< \brief Dimension of output vector (number of measured
+                           values) */
+  uint n_;            /**< \brief Dimension of state vector */
 
   // System matrices:
-  arma::mat A_;       /**< State matrix with dimensions n x n */
-  arma::mat B_;       /**< Input matrix with dimensions n x l */
-  arma::mat C_;       /**< Output matrix with dimensions m x n */
+  arma::mat A_;       /**< \brief State matrix with dimensions n x n */
+  arma::mat B_;       /**< \brief Input matrix with dimensions n x l */
+  arma::mat C_;       /**< \brief Output matrix with dimensions m x n */
 
   // Kalman gain matrix:
-  arma::mat K_;       /**< Kalman gain; matrix with dimensions n x m */
+  arma::mat K_;       /**< \brief Kalman gain; matrix with dimensions n x m */
 
   // Identity matrix
-  arma::mat I_;       /**< Identity matrix with dimensions n x n */
+  arma::mat I_;       /**< \brief Identity matrix with dimensions n x n */
 
   // Covariance matrices:
-  arma::mat P_;       /**< Estimate covariance matrix with dimensions n x n */
-  arma::mat Q_;       /**< Process covariance matrix with dimensions n x n */
-  arma::mat R_;       /**< Measurement covariance matrix with dimensions m x m */
-  arma::mat S_;       /**< Innovation covariance matrix with dimensions m x m */
+  arma::mat P_;       /**< \brief Estimate covariance matrix with dimensions
+                           n x n */
+  arma::mat Q_;       /**< \brief Process covariance matrix with dimensions
+                           n x n */
+  arma::mat R_;       /**< \brief Measurement covariance matrix with dimensions
+                           m x m */
+  arma::mat S_;       /**< \brief Innovation covariance matrix with dimensions
+                           m x m */
 
   // Signals:
-  arma::vec u_;       /**< Input vector with dimension l */
-  arma::vec y_;       /**< Output vector with dimension m */
-  arma::vec q_pred_;  /**< Predicted state vector with dimension n */
-  arma::vec q_est_;   /**< Estimated state vector with dimension n */
+  arma::vec u_;       /**< \brief Input vector with dimension l */
+  arma::vec y_;       /**< \brief Output vector with dimension m */
+  arma::vec q_pred_;  /**< \brief Predicted state vector with dimension n */
+  arma::vec q_est_;   /**< \brief Estimated state vector with dimension n */
 };
 
 } // namespace kf
