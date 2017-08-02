@@ -157,7 +157,7 @@ public:
    *
    * \sa KalmanFilter::setOutput(), outputFunction_(), outputJacobian_()
   */
-  void correctState(const arma::vec& y) {
+  virtual void correctState(const arma::vec& y) {
     setOutput(y);
     correctState();
   }
@@ -168,7 +168,7 @@ protected:
 
   /** \brief Process function
    *
-   * Pointer to a function which returns arma::vec of dimension n, representing
+   * Wrapper of a function which returns arma::vec of dimension n, representing
    * the new state vector, and which takes two arguments of type arma::vec, with
    * dimensions n and l, respectively. The arguments of the function are
    * previous state vector and input vector.
@@ -187,7 +187,7 @@ protected:
 
   /** \brief Output function
    *
-   * Pointer to a function which returns arma::vec of dimension m, representing
+   * Wrapper of a function which returns arma::vec of dimension m, representing
    * the output vector, and taking single argument of type arma::vec, with
    * dimension n, representing the state vector.
    *
@@ -204,7 +204,7 @@ protected:
 
   /** \brief Process Jacobian
    *
-   * Pointer to a function which returns arma::mat of dimensions n x n,
+   * Wrapper of a function which returns arma::mat of dimensions n x n,
    * representing the linear approximation of the process function f(). The
    * arguments of the function are the state and input vectors from the previous
    * time step.
@@ -223,7 +223,7 @@ protected:
 
   /** \brief Output Jacobian
    *
-   * Pointer to a function which returns arma::mat of dimensions m x n,
+   * Wrapper of a function which returns arma::mat of dimensions m x n,
    * representing the linear approximation of the output function h(). The
    * argument of the function is the state vector for the current time step.
    *
