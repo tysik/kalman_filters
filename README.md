@@ -25,30 +25,26 @@ Imagine you have an object moving along a 1D line (cf. Fig 1). You have the meas
 
 -----------------------
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/1482514/28799173-c7996088-7647-11e7-910c-6f1006ca3659.png" alt="Linear system."/>
+  <img src="https://user-images.githubusercontent.com/1482514/28871866-cff75ac4-7786-11e7-8280-237df07c0d60.png" alt="Linear system with position `x`, velocity `v`, acceleration `a`."/>
   <br/>
   Fig. 1. Linear system with position `x`, velocity `v`, acceleration `a`.
 </p>
 
 -----------------------
 
-Let's start with finding the state space representation of this system. Let the state be composed of position and velocity (`q = [p, v]T`, `n = 2`). The input is acceleration (`u = a`, `l = 1`), The output is position measurement (`y = p`, `m = 1`). The state space matrices are:
+Let's start with finding the state space representation of this system. Let the state be composed of position and velocity (`q = [p ; v]`, `n = 2`). The input is acceleration (`u = [a]`, `l = 1`), The output is position measurement (`y = [p]`, `m = 1`). The state space matrices are:
 
-`A = [1  Tp]`
-`    [0  1 ]`
+`A = [1, Tp ; 0, 1]`
+`B = [0.5 Tp^2 ; Tp]`
+`C = [1, 0]`
 
-`B = [0.5Tp^2]`
-`    [  Tp   ]`
-
-`C = [1  0]`
-
-Once the KF object is created we have to tune its parameters. Although we could obtain the true measurement covariance (by taking a lot of samples and calculations) we can simply set it to one (`R = 1`) and then tune the process covariance. After all it is the ratio of these two which is the most important. After some testing we found `Q = diag(0.001, 0.001)`, so the prediction is more reliable than update. 
+Once the KF object is created we have to tune its parameters. Although we could obtain the true measurement covariance (by taking a lot of samples and calculations) we can simply set it to one (`R = 1`) and then tune the process covariance. After all it is the ratio of these two which is the most important. After some testing we found `Q = [0.001, 0 ; 0, 0.001]`, so the prediction is more reliable than update. 
 
 During simulation we update the KF at every sample with function `updateState(u, y)` even though the measurement comes only once every ten samples. The reason for that is that this measurement is the latest, most believed measurement we have got so we _freeze_ it. You can see the output of KF estimation on Fig. 2. Estimated position is visually better than pure measurement.
 
 -----------------------
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/1482514/28791866-0c439e0c-762e-11e7-8ee6-cac6ed5bf844.png" alt="Exemplary use of KF."/>
+  <img src="https://user-images.githubusercontent.com/1482514/28871865-cfd7d42e-7786-11e7-9671-b49a67741ccd.png" alt="Exemplary use of KF."/>
   <br/>
   Fig. 2. Exemplary use of KF.
 </p>
