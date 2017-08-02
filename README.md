@@ -97,3 +97,5 @@ Once the system equations are set, it is time to tune the parameters. As in the 
 
 -----------------------
 
+Author:
+_Mateusz Przybyła_
