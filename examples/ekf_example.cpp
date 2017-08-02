@@ -37,6 +37,7 @@ const double g = 9.8;   // Gravitational accel.
 const double d = 1.0;   // Length in m
 const double b = 0.5;   // Friction coef. in 1/s
 
+// Process function as standard function
 vec processFunction(vec q, vec u) {
   vec q_pred = vec(2).zeros();
 
@@ -47,29 +48,30 @@ vec processFunction(vec q, vec u) {
   return q_pred;
 }
 
-vec outputFunction(vec q) {
-  vec y = vec(2).zeros();
+// Output function as lambda
+auto outputFunction = [](vec q)->vec{
+  return {d * sin(q(0)), d * cos(q(0))}; };
 
-  y(0) = d * sin(q(0));
-  y(1) = d * cos(q(0));
+// Process Jacobian as member function
+struct ProcessJacobian {
+  mat processJacobian(vec q, vec u) {
+    double a11 = 1.0;
+    double a12 = system_dt;
+    double a21 = (g + u(0)) * cos(q(0)) * system_dt / d;
+    double a22 = 1.0 - b * system_dt / (m * d * d);
 
-  return y;
-}
+    return { {a11, a12},
+             {a21, a22} };
+  }
+};
 
-mat processJacobian(vec q, vec u) {
-  double a11 = 1.0;
-  double a12 = system_dt;
-  double a21 = (g + u(0)) * cos(q(0)) * system_dt / d;
-  double a22 = 1.0 - b * system_dt / (m * d * d);
-
-  return { {a11, a12},
-           {a21, a22} };
-}
-
-mat outputJacobian(vec q) {
-  return { { d * cos(q(0)), 0.0},
-           {-d * sin(q(0)), 0.0} };
-}
+// Output Jacobian as function object
+struct outputJacobian {
+  mat operator()(vec q) const {
+    return { { d * cos(q(0)), 0.0},
+             {-d * sin(q(0)), 0.0} };
+  }
+};
 
 
 int main() {
@@ -99,11 +101,20 @@ int main() {
   // Preparing KF
   ExtendedKalmanFilter ekf(1, 2, 2);
 
+  // Use standard function
   ekf.setProcessFunction(processFunction);
+
+  // Use predefined lambda
   ekf.setOutputFunction(outputFunction);
 
-  ekf.setProcessJacobian(processJacobian);
-  ekf.setOutputJacobian(outputJacobian);
+  // Use member function
+  ProcessJacobian s;
+  using std::placeholders::_1;
+  using std::placeholders::_2;
+  ekf.setProcessJacobian(std::bind(&ProcessJacobian::processJacobian, &s, _1, _2));
+
+  // Use function object
+  ekf.setOutputJacobian(outputJacobian());
 
   mat Q = {{0.001, 0.0}, {0.0, 0.001}};
   mat R = {{1.0, 0.0}, {0.0, 1.0}};
