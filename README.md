@@ -35,7 +35,9 @@ Imagine you have an object moving along a 1D line (cf. Fig 1). You have the meas
 Let's start with finding the state space representation of this system. Let the state be composed of position and velocity (`q = [p ; v]`, `n = 2`). The input is acceleration (`u = [a]`, `l = 1`), The output is position measurement (`y = [p]`, `m = 1`). According to state equation `q(k+1) = Aq(k) + Bu(k)` and output equation `y(k) = Cx(k)` state space matrices are:
 
 `A = [1, Tp ; 0, 1]`
+
 `B = [0.5 Tp^2 ; Tp]`
+
 `C = [1, 0]`
 
 Once the KF object is created we have to tune its parameters. Although we could obtain the true measurement covariance (by taking a lot of samples and calculations) we can simply set it to one (`R = 1`) and then tune the process covariance. After all it is the ratio of these two which is the most important. After some testing we found `Q = [0.001, 0 ; 0, 0.001]`, so the prediction is more reliable than update.
@@ -75,11 +77,13 @@ Imagine there is a rigid pendulum of lenght `d` with a point-mass `m` attached t
 First let's start with state-space representation. Let the state be composed of angular position and velocity (`q = [phi ; omega]`, `n = 2`). The input is acceleration of the moving frame (`u = [a]`, `l = 1`). The output is the measurement of end-point coordinates (`y = [x ; z]`, `m = 2`). Now let's define the discrete process and output functions:
 
 `q(k+1) = f(q(k), u(k)) = [phi(k) + omega(k) Tp ; omega(k) + ( m d (g + a(k)) sin(phi(k)) - b omega(k) ) Tp / (m d^2) ]`
+
 `y(k) = g(q(k)) = [d sin(phi(k)) ; d cos(phi(k))]`
 
 To get the linear part for proper covariance propagation, we need to find the Jacobians of these function w.r.t. state space:
 
 `df / dq = [1, Tp ; m d (g + a(k)) cos(phi(k)) Tp / (m d^2), 1 - b Tp / (m d^2) ]`
+
 `dg / dq = [d cos(phi(k)), 0 ; -d sin(phi(k)), 0 ]`
 
 Once the system equations are set, it is time to tune the parameters. As in the KF example, we set measurement covariance to one (`R = [1, 0 ; 0, 1]`). After some testing we found again `Q = [0.001, 0 ; 0, 0.001]`. The results can be seen on Fig. 4.
