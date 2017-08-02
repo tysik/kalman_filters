@@ -1,3 +1,5 @@
 *.user
+*.autosave
 html/
 latex/
+doc/
