@@ -11,3 +11,6 @@ target_link_libraries(KF_test ${ARMADILLO_LIBRARIES} libpython2.7.so)
 
 add_executable(EKF_test examples/ekf_example.cpp extended_kalman_filter.h)
 target_link_libraries(EKF_test ${ARMADILLO_LIBRARIES} libpython2.7.so)
+
+add_executable(UKF_test examples/ukf_example.cpp unscented_kalman_filter.h)
+target_link_libraries(UKF_test ${ARMADILLO_LIBRARIES} libpython2.7.so)
