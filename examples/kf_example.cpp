@@ -96,7 +96,7 @@ int main() {
     true_pos[i] = true_pos[i - 1] + true_vel[i] * system_dt;
 
     // New measurement comes once every M samples of the system
-    if (i % M == 0)
+    if (i % M == 1)
       measured_pos[i] = true_pos[i] + measurement_noise(generator);
     else
       measured_pos[i] = measured_pos[i - 1];

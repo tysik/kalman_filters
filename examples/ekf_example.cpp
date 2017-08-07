@@ -98,7 +98,7 @@ int main() {
   normal_distribution<double> measurement_noise(measurement_mu, measurement_sigma);
   normal_distribution<double> process_noise(process_mu, process_sigma);
 
-  // Preparing KF
+  // Preparing EKF
   ExtendedKalmanFilter ekf(1, 2, 2);
 
   // Use standard function
@@ -150,7 +150,7 @@ int main() {
     true_ang[i] = q(0);
 
     // New measurement comes once every M samples of the system
-    if (i % M == 0) {
+    if (i % M == 1) {
       measured_xy[i] = outputFunction({true_ang[i]});
       measured_xy[i](0) += measurement_noise(generator);
       measured_xy[i](1) += measurement_noise(generator);
