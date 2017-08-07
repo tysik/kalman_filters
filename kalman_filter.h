@@ -3,6 +3,15 @@
 #include <armadillo>
 #include <stdexcept>
 
+/*! \mainpage Kalman Filters
+ *
+ * kf::KalmanFilter
+ *
+ * kf::ExtendedKalmanFilter
+ *
+ * kf::UnscentedKalmanFilter
+ */
+
 namespace kf {
 
 /** \class KalmanFilter kalman_filter.h

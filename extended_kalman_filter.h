@@ -111,26 +111,12 @@ public:
     * state estimate and input. Updates the process Jacobian and estimate error
     * covariance matrix.
     *
-    * \sa processFunction(), processJacobian_()
+    * \sa processFunction_(), processJacobian_()
    */
   virtual void predictState() {
     q_pred_ = processFunction_(q_est_, u_);
     A_ = processJacobian_(q_est_, u_);
     P_ = A_ * P_ * trans(A_) + Q_;
-  }
-
-  /** \brief Performs the EKF prediction step given the input vector
-   *
-   * Sets provided input vector, calculates the state evolution for the current
-   * time step based on previous state estimate and input. Updates the process
-   * Jacobian and estimate error covariance matrix.
-   *
-   * \param u is the input vector with dimension l
-   * \sa KalmanFilter::setInput(), processFunction_(), processJacobian_()
-  */
-  virtual void predictState(const arma::vec& u) {
-    setInput(u);
-    predictState();
   }
 
   /** \brief Performs the EKF correction step
@@ -147,19 +133,6 @@ public:
     K_ = P_ * trans(C_) * inv(S_);
     q_est_ = q_pred_ + K_ * (y_ - outputFunction_(q_pred_));
     P_ = (I_ - K_ * C_) * P_;
-  }
-
-  /** \brief Performs the EKF correction step given the output vector
-   *
-   * Sets provided output vector, calculates the new Kalman gain, corrects the
-   * state prediction to obtain new state estimate, and updates estimate error
-   * covariance as well as innovation covariance.
-   *
-   * \sa KalmanFilter::setOutput(), outputFunction_(), outputJacobian_()
-  */
-  virtual void correctState(const arma::vec& y) {
-    setOutput(y);
-    correctState();
   }
 
 protected:

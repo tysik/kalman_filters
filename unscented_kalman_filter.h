@@ -86,69 +86,76 @@ public:
   {}
 
 
+  /** \brief Design parameters setter
+   *
+   * Sets the values of alpha, beta and kappa parameters and calculates the
+   * value of parameter lambda. Prepares the weights for mean and covariance
+   * propagation via unscented transform.
+   * (www.seas.harvard.edu/courses/cs281/papers/unscented.pdf)
+   *
+   * \param alpha is the new value of alpha parameter
+   * \param beta is the new value of beta parameter
+   * \param kappa is the new value of kappa parameter
+  */
+  void setDesignParameters(const double alpha, const double beta, const double kappa) {
+    alpha_ = alpha;
+    beta_ = beta;
+    kappa_ = kappa;
+    lambda_ = pow(alpha, 2.0) * (n_ + kappa) - n_;
+
+    // Set the weights for central sigma point
+    mean_weights_[0] = lambda_ / (n_ + lambda_);
+    covariance_weights_[0] = lambda_ / (n_ + lambda_) + 1.0 - pow(alpha_, 2.0) + beta_;
+
+    // Set the weights for other sigma points
+    for (int i = 1; i < k_; ++i)
+      mean_weights_[i] = covariance_weights_[i] = 0.5 / (n_ + lambda_);
+  }
+
+
   /** \brief Performs the UKF prediction step
     *
-    * TODO
+    * Calculates the sigma points based on the current covariance matrix and
+    * predicts the new state with the use of process function. Propagates the
+    * covariance based on unscented transform.
     *
-    * \sa processFunction()
+    * Before using this function the design parameters must be set.
+    *
+    * \sa processFunction_(), setDesignParameters()
    */
   virtual void predictState() {
-    double alpha = 0.75;
-    double beta = 0.2;
-    double kappa = 3.0;
-    double lambda = pow(alpha, 2.0) * (n_ + kappa) - n_;
+    arma::mat sqrt_P = arma::chol((n_ + lambda_) * P_);
 
-    arma::mat sqrt_P = arma::chol((n_ + lambda) * P_);
-
-    // 1. Calculate sigma points
     sigma_points_[0] = q_est_;
-    mean_weights_[0] = lambda / (n_ + lambda);
-    covariance_weights_[0] = lambda / (n_ + lambda) + (1 - pow(alpha, 2.0) + beta);
-
     for (int i = 1; i < n_ + 1; ++i) {
       sigma_points_[i] = q_est_ + sqrt_P.col(i - 1);
       sigma_points_[i + n_] = q_est_ - sqrt_P.col(i - 1);
-
-      mean_weights_[i] = covariance_weights_[i] = 1.0 / (2.0 * (n_ + lambda));
-      mean_weights_[i + n_] = covariance_weights_[i + n_] = 1.0 / (2.0 * (n_ + lambda));
     }
 
-    // 2. Predict new points based on sigma points
     for (int i = 0; i < k_; ++i)
       pred_sigma_points_[i] = processFunction_(sigma_points_[i], u_);
 
-    // 3. Calculate mean of predicted points
     q_pred_ = arma::vec(n_).zeros();
-    for (int i = 0; i < k_; ++i) {
+    for (int i = 0; i < k_; ++i)
       q_pred_ += mean_weights_[i] * pred_sigma_points_[i];
-    }
 
-    // 4. Caclulate covariance of predicted points
     P_ = Q_;
     for (int i = 0; i < k_; ++i)
-      P_ += covariance_weights_[i] * (pred_sigma_points_[i] - q_pred_) * trans(pred_sigma_points_[i] - q_pred_);
-  }
-
-  /** \brief Performs the UKF prediction step given the input vector
-   *
-   * TODO
-   *
-   * \param u is the input vector with dimension l
-   * \sa KalmanFilter::setInput(), processFunction_()
-  */
-  virtual void predictState(const arma::vec& u) {
-    setInput(u);
-    predictState();
+      P_ += covariance_weights_[i] * (pred_sigma_points_[i] - q_pred_) *
+            trans(pred_sigma_points_[i] - q_pred_);
   }
 
   /** \brief Performs the UKF correction step
    *
-   * TODO
+   * Propagates the sigma points into output space via output function.
+   * Calculates the mean output based on these points and innovation covariance.
+   * Calculates the Kalman gain and corrects the prediction with innovation.
    *
-   * \sa outputFunction_()
+   * Before using this function the design parameters must be set.
+   *
+   * \sa outputFunction_(), setDesignParameters()
   */
   virtual void correctState() {
-    // 1. Calculate output points based on predicted sigma pts
     for (int i = 0; i < k_; ++i)
       output_sigma_points_[i] = outputFunction_(pred_sigma_points_[i]);
 
@@ -158,27 +165,18 @@ public:
 
     S_ = R_;
     for (int i = 0; i < k_; ++i)
-      S_ += covariance_weights_[i] * (output_sigma_points_[i] - y_pred) * trans(output_sigma_points_[i] - y_pred);
+      S_ += covariance_weights_[i] * (output_sigma_points_[i] - y_pred) *
+            trans(output_sigma_points_[i] - y_pred);
 
-    arma::mat Sth = arma::mat(n_, m_).zeros();
+    arma::mat Pqy = arma::mat(n_, m_).zeros();  // Cross covariance
     for (int i = 0; i < k_; ++i)
-      Sth += covariance_weights_[i] * (pred_sigma_points_[i] - q_pred_) * trans(output_sigma_points_[i] - y_pred);
+      Pqy += covariance_weights_[i] * (pred_sigma_points_[i] - q_pred_) *
+             trans(output_sigma_points_[i] - y_pred);
 
-    K_ = Sth * inv(S_);
+    K_ = Pqy * inv(S_);
 
     q_est_ = q_pred_ + K_ * (y_ - y_pred);
     P_ = P_ - K_ * S_ * trans(K_);
-  }
-
-  /** \brief Performs the UKF correction step given the output vector
-   *
-   * TODO
-   *
-   * \sa KalmanFilter::setOutput(), outputFunction_()
-  */
-  virtual void correctState(const arma::vec& y) {
-    setOutput(y);
-    correctState();
   }
 
 protected:
@@ -187,23 +185,34 @@ protected:
 
 private:
   /** \brief This base class member function is hidden because it serves no use
-   * in this context.
-  */
+   * in this context. */
   void setProcessJacobian() {}
 
   /** \brief This base class member function is hidden because it serves no use
-   * in this context.
-  */
+   * in this context. */
   void setOutputJacobian() {}
 
-  uint k_;  /**< \brief Number of sigma points */
+  uint k_;          /**< \brief Number of sigma points */
 
-  std::vector<arma::vec> sigma_points_;         /**< \brief Points for distribution propagation */
-  std::vector<arma::vec> pred_sigma_points_;    /**< \brief Points for distribution propagation */
-  std::vector<arma::vec> output_sigma_points_;  /**< \brief Points for distribution propagation */
+  double alpha_;    /**< \brief Design parameter */
+  double beta_;     /**< \brief Design parameter */
+  double kappa_;    /**< \brief Design parameter */
+  double lambda_;   /**< \brief Automatically calculated design parameter */
 
-  std::vector<double> mean_weights_;        /**< \brief Weights for mean propagation */
-  std::vector<double> covariance_weights_;  /**< \brief Weights for covariance propagation */
+  std::vector<arma::vec> sigma_points_;         /**< \brief States representing
+                                                  the current probability
+                                                  distribution */
+  std::vector<arma::vec> pred_sigma_points_;    /**< \brief States representing
+                                                  the predicted probability
+                                                  distribution */
+  std::vector<arma::vec> output_sigma_points_;  /**< \brief States representing
+                                                  the output probability
+                                                  distribution */
+
+  std::vector<double> mean_weights_;        /**< \brief Weights for mean
+                                              propagation */
+  std::vector<double> covariance_weights_;  /**< \brief Weights for covariance
+                                              propagation */
 };
 
 } // namespace kf
