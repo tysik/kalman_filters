@@ -37,7 +37,9 @@ public:
   UnscentedKalmanFilter(uint dim_in, uint dim_out, uint dim_state) :
     ExtendedKalmanFilter(dim_in, dim_out, dim_state),
     k_(2 * dim_state + 1),
-    sigma_points_(k_, arma::vec(dim_state).zeros()),
+    sigma_points_(k_, arma::vec(n_).zeros()),
+    pred_sigma_points_(k_, arma::vec(n_).zeros()),
+    output_sigma_points_(k_, arma::vec(n_).zeros()),
     mean_weights_(k_, 0.0),
     covariance_weights_(k_, 0.0)
   {}
@@ -56,6 +58,8 @@ public:
     ExtendedKalmanFilter(A, B, C),
     k_(2 * n_ + 1),
     sigma_points_(k_, arma::vec(n_).zeros()),
+    pred_sigma_points_(k_, arma::vec(n_).zeros()),
+    output_sigma_points_(k_, arma::vec(n_).zeros()),
     mean_weights_(k_, 0.0),
     covariance_weights_(k_, 0.0)
   {}
@@ -75,6 +79,8 @@ public:
     ExtendedKalmanFilter(u, y, q),
     k_(2 * n_ + 1),
     sigma_points_(k_, arma::vec(n_).zeros()),
+    pred_sigma_points_(k_, arma::vec(n_).zeros()),
+    output_sigma_points_(k_, arma::vec(n_).zeros()),
     mean_weights_(k_, 0.0),
     covariance_weights_(k_, 0.0)
   {}
