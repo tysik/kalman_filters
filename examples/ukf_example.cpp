@@ -37,20 +37,14 @@ const double g = 9.8;   // Gravitational accel.
 const double d = 1.0;   // Length in m
 const double b = 0.5;   // Friction coef. in 1/s
 
-// Process function as standard function
 auto processFunction = [](vec q, vec u)->vec{
-  vec q_pred = vec(2).zeros();
+  return { q(0) + q(1) * system_dt,
+           q(1) + (m * (g + u(0)) * d * sin(q(0)) - b * q(1)) * system_dt /
+                      (m * d * d) }; };
 
-  q_pred(0) = q(0) + q(1) * system_dt;
-  q_pred(1) = q(1) + (m * (g + u(0)) * d * sin(q(0)) - b * q(1)) * system_dt /
-              (m * d * d);
-
-  return q_pred;
-};
-
-// Output function as lambda
 auto outputFunction = [](vec q)->vec{
-  return {d * sin(q(0)), d * cos(q(0))}; };
+  return { d * sin(q(0)),
+           d * cos(q(0)) }; };
 
 
 int main() {
@@ -82,6 +76,8 @@ int main() {
 
   ukf.setProcessFunction(processFunction);
   ukf.setOutputFunction(outputFunction);
+
+  ukf.setDesignParameters(0.05, 2.0, 0.0);
 
   mat Q = {{0.001, 0.0}, {0.0, 0.001}};
   mat R = {{1.0, 0.0}, {0.0, 1.0}};
