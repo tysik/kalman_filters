@@ -1,7 +1,5 @@
 #pragma once
 
-#include <functional>
-
 #include "extended_kalman_filter.h"
 
 namespace kf {
@@ -34,7 +32,7 @@ public:
    * \param dim_out is the dimension of output vector (number of measurements)
    * \param dim_state is the dimension of state vector
   */
-  UnscentedKalmanFilter(uint dim_in, uint dim_out, uint dim_state) :
+  UnscentedKalmanFilter(size_t dim_in, size_t dim_out, size_t dim_state) :
     ExtendedKalmanFilter(dim_in, dim_out, dim_state),
     k_(2 * dim_state + 1),
     sigma_points_(k_, arma::vec(n_).zeros()),
@@ -88,9 +86,13 @@ public:
 
   /** \brief Performs the UKF prediction step
     *
-    * TODO
+    * Calculates the prediction of current state based on the process function
+    * and updates the estimate error covariance matrix based on distribution of
+    * sigma points.
     *
-    * \sa processFunction()
+    * The parameters of mean and covariance weights are currently fixed.
+    *
+    * \sa processFunction_
    */
   virtual void predictState() {
     double alpha = 0.75;
@@ -103,85 +105,72 @@ public:
     // 1. Calculate sigma points
     sigma_points_[0] = q_est_;
     mean_weights_[0] = lambda / (n_ + lambda);
-    covariance_weights_[0] = lambda / (n_ + lambda) + (1 - pow(alpha, 2.0) + beta);
+    covariance_weights_[0] = lambda / (n_ + lambda) +
+        (1.0 - pow(alpha, 2.0) + beta);
 
-    for (int i = 1; i < n_ + 1; ++i) {
+    for (size_t i = 1; i < n_ + 1; ++i) {
       sigma_points_[i] = q_est_ + sqrt_P.col(i - 1);
       sigma_points_[i + n_] = q_est_ - sqrt_P.col(i - 1);
 
       mean_weights_[i] = covariance_weights_[i] = 1.0 / (2.0 * (n_ + lambda));
-      mean_weights_[i + n_] = covariance_weights_[i + n_] = 1.0 / (2.0 * (n_ + lambda));
+      mean_weights_[i + n_] = covariance_weights_[i + n_] = 1.0 /
+          (2.0 * (n_ + lambda));
     }
 
     // 2. Predict new points based on sigma points
-    for (int i = 0; i < k_; ++i)
+    for (size_t i = 0; i < k_; ++i)
       pred_sigma_points_[i] = processFunction_(sigma_points_[i], u_);
 
-    // 3. Calculate mean of predicted points
+    // 3. Calculate mean of predicted points (weights are normalized)
     q_pred_ = arma::vec(n_).zeros();
-    for (int i = 0; i < k_; ++i) {
+    for (size_t i = 0; i < k_; ++i) {
       q_pred_ += mean_weights_[i] * pred_sigma_points_[i];
     }
 
-    // 4. Caclulate covariance of predicted points
+    // 4. Caclulate covariance of predicted points (weights are normalized)
     P_ = Q_;
-    for (int i = 0; i < k_; ++i)
-      P_ += covariance_weights_[i] * (pred_sigma_points_[i] - q_pred_) * trans(pred_sigma_points_[i] - q_pred_);
-  }
-
-  /** \brief Performs the UKF prediction step given the input vector
-   *
-   * TODO
-   *
-   * \param u is the input vector with dimension l
-   * \sa KalmanFilter::setInput(), processFunction_()
-  */
-  virtual void predictState(const arma::vec& u) {
-    setInput(u);
-    predictState();
+    for (size_t i = 0; i < k_; ++i)
+      P_ += covariance_weights_[i] * (pred_sigma_points_[i] - q_pred_) *
+          trans(pred_sigma_points_[i] - q_pred_);
   }
 
   /** \brief Performs the UKF correction step
    *
-   * TODO
+   * Calculates the estimate of current state based on predicted sigma points
+   * and their weights. Updates the estimate error covariance matrix.
    *
-   * \sa outputFunction_()
+   * \sa outputFunction_
   */
   virtual void correctState() {
-    // 1. Calculate output points based on predicted sigma pts
-    for (int i = 0; i < k_; ++i)
+    // 1. Calculate predicted output points based on predicted sigma points
+    for (size_t i = 0; i < k_; ++i)
       output_sigma_points_[i] = outputFunction_(pred_sigma_points_[i]);
 
+    // 2. Calculate mean output
     arma::vec y_pred = arma::vec(m_).zeros();
-    for (int i = 0; i < k_; ++i)
+    for (size_t i = 0; i < k_; ++i)
       y_pred += mean_weights_[i] * output_sigma_points_[i];
 
+    // 3. Update innovation covariance matrix
     S_ = R_;
-    for (int i = 0; i < k_; ++i)
+    for (size_t i = 0; i < k_; ++i)
       S_ += covariance_weights_[i] * (output_sigma_points_[i] - y_pred) * trans(output_sigma_points_[i] - y_pred);
 
+    // 4. Calculate new Kalman gain
     arma::mat Sth = arma::mat(n_, m_).zeros();
-    for (int i = 0; i < k_; ++i)
+    for (size_t i = 0; i < k_; ++i)
       Sth += covariance_weights_[i] * (pred_sigma_points_[i] - q_pred_) * trans(output_sigma_points_[i] - y_pred);
 
     K_ = Sth * inv(S_);
 
+    // 5. Estimate state and update estimate error covariance matrix
     q_est_ = q_pred_ + K_ * (y_ - y_pred);
     P_ = P_ - K_ * S_ * trans(K_);
   }
 
-  /** \brief Performs the UKF correction step given the output vector
-   *
-   * TODO
-   *
-   * \sa KalmanFilter::setOutput(), outputFunction_()
-  */
-  virtual void correctState(const arma::vec& y) {
-    setOutput(y);
-    correctState();
-  }
 
 protected:
+
   /** \brief This class cannot be instantiated without providing dimensions. */
   UnscentedKalmanFilter() {}
 
@@ -198,12 +187,17 @@ private:
 
   uint k_;  /**< \brief Number of sigma points */
 
-  std::vector<arma::vec> sigma_points_;         /**< \brief Points for distribution propagation */
-  std::vector<arma::vec> pred_sigma_points_;    /**< \brief Points for distribution propagation */
-  std::vector<arma::vec> output_sigma_points_;  /**< \brief Points for distribution propagation */
+  std::vector<arma::vec> sigma_points_;         /**< \brief Points for distribution
+                                                            of estimate error */
+  std::vector<arma::vec> pred_sigma_points_;    /**< \brief Points for distribution
+                                                            of prediction error */
+  std::vector<arma::vec> output_sigma_points_;  /**< \brief Points for distribution
+                                                            of output error */
 
-  std::vector<double> mean_weights_;        /**< \brief Weights for mean propagation */
-  std::vector<double> covariance_weights_;  /**< \brief Weights for covariance propagation */
+  std::vector<double> mean_weights_;        /**< \brief Weights for mean
+                                                        propagation */
+  std::vector<double> covariance_weights_;  /**< \brief Weights for covariance
+                                                        propagation */
 };
 
 } // namespace kf

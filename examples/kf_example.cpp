@@ -84,7 +84,7 @@ int main() {
   believed_acc[0] = 0.0;
 
   // Simulation
-  for (int i = 1; i < N; ++i) {
+  for (size_t i = 1; i < N; ++i) {
     time[i] = i * system_dt;
 
     // We belive that acceleration was this

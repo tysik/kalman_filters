@@ -25,16 +25,15 @@ public:
 
   /** \brief Constructor with given dimensions
    *
-   * Constructor with given dimensions. Initializes all vectors and matrices to
-   * have correct dimensions. State matrix as well as all covariance matrices
-   * are initialized with ones on diagonal. The rest of data is zero-value
-   * initialized.
+   * Initializes all vectors and matrices to have correct dimensions. State
+   * matrix as well as all covariance matrices are initialized with ones on
+   * diagonal. The rest of data is zero-value initialized.
    *
    * \param dim_in is the dimension of input vector (number of control signals)
    * \param dim_out is the dimension of output vector (number of measurements)
    * \param dim_state is the dimension of state vector
   */
-  KalmanFilter(uint dim_in, uint dim_out, uint dim_state) :
+  KalmanFilter(size_t dim_in, size_t dim_out, size_t dim_state) :
     l_(dim_in),
     m_(dim_out),
     n_(dim_state),
@@ -59,10 +58,9 @@ public:
 
   /** \brief Constructor with given state-space matrices
    *
-   * Constructor with given state-space matrices. Initializes all vectors and
-   * matrices to have correct dimensions and assigns given state-space matrices.
-   * All covariance matrices are initialized with ones on diagonal. The rest
-   * of data is zero-value initialized.
+   * Initializes all vectors and matrices to have correct dimensions and assigns
+   * given state-space matrices. All covariance matrices are initialized with
+   * ones on diagonal. The rest of data is zero-value initialized.
    *
    * \param A is the state matrix
    * \param B is the input matrix
@@ -78,11 +76,10 @@ public:
 
   /** \brief Constructor with given state-space vectors
    *
-   * Constructor with given state-space vectors. Initializes all vectors and
-   * matrices to have correct dimensions and assigns given vectors. Both
-   * predicted an estimated state vectors are assigned with given state vector.
-   * All covariance matrices are initialized with ones on diagonal. The rest
-   * of data is zero-value initialized.
+   * Initializes all vectors and matrices to have correct dimensions and assigns
+   * given vectors. Both predicted an estimated state vectors are assigned with
+   * given state vector. All covariance matrices are initialized with ones on
+   * diagonal. The rest of data is zero-value initialized.
    *
    * \param u is the input vector
    * \param y is the output vector
@@ -106,7 +103,7 @@ public:
   */
   void setStateMatrix(const arma::mat& A) {
     if (arma::size(A) != arma::size(A_))
-      throw std::length_error("Incorrect dimensions");
+      throw std::length_error("Incorrect dimensions of state matrix");
     else
       A_ = A;
   }
@@ -119,7 +116,7 @@ public:
   */
   void setInputMatrix(const arma::mat& B) {
     if (arma::size(B) != arma::size(B_))
-      throw std::length_error("Incorrect dimensions");
+      throw std::length_error("Incorrect dimensions of input matrix");
     else
       B_ = B;
   }
@@ -132,7 +129,7 @@ public:
   */
   void setOutputMatrix(const arma::mat& C) {
     if (arma::size(C) != arma::size(C_))
-      throw std::length_error("Incorrect dimensions");
+      throw std::length_error("Incorrect dimensions of output matrix");
     else
       C_ = C;
   }
@@ -145,7 +142,7 @@ public:
   */
   void setEstimateCovariance(const arma::mat& P) {
     if (arma::size(P) != arma::size(P_))
-      throw std::length_error("Incorrect dimensions");
+      throw std::length_error("Incorrect dimensions of estimate cov. matrix");
     else
       P_ = P;
   }
@@ -158,7 +155,7 @@ public:
   */
   void setProcessCovariance(const arma::mat& Q) {
     if (arma::size(Q) != arma::size(Q_))
-      throw std::length_error("Incorrect dimensions");
+      throw std::length_error("Incorrect dimensions of process cov. matrix");
     else
       Q_ = Q;
   }
@@ -171,7 +168,7 @@ public:
   */
   void setOutputCovariance(const arma::mat& R) {
     if (arma::size(R) != arma::size(R_))
-      throw std::length_error("Incorrect dimensions");
+      throw std::length_error("Incorrect dimensions of output cov. matrix");
     else
       R_ = R;
   }
@@ -185,7 +182,7 @@ public:
   */
   void setInput(const arma::vec& u) {
     if (arma::size(u) != arma::size(u_))
-      throw std::length_error("Incorrect dimensions");
+      throw std::length_error("Incorrect dimensions of input vector");
     else
       u_ = u;
   }
@@ -198,7 +195,7 @@ public:
   */
   void setOutput(const arma::vec& y) {
     if (arma::size(y) != arma::size(y_))
-      throw std::length_error("Incorrect dimensions");
+      throw std::length_error("Incorrect dimensions of output vector");
     else
       y_ = y;
   }
@@ -211,7 +208,7 @@ public:
   */
   void setPrediction(const arma::vec& q_pred) {
     if (arma::size(q_pred) != arma::size(q_pred_))
-      throw std::length_error("Incorrect dimensions");
+      throw std::length_error("Incorrect dimensions of predicted state vector");
     else
       q_pred_ = q_pred;
   }
@@ -224,7 +221,7 @@ public:
   */
   void setEstimate(const arma::vec& q_est) {
     if (arma::size(q_est) != arma::size(q_est_))
-      throw std::length_error("Incorrect dimensions");
+      throw std::length_error("Incorrect dimensions of estimated state vector");
     else
       q_est_ = q_est;
   }
@@ -232,7 +229,7 @@ public:
 
   /** \brief Estimate covariance matrix getter
    *
-   * \returns the latest estimate covariance matrix P
+   * \returns the current estimate covariance matrix P
   */
   const arma::mat& getEstimateCovariance() const { return P_; }
 
@@ -241,7 +238,7 @@ public:
    * Innovation covariance matrix is calculated during correction step
    * S = C * P * trans(C) + R.
    *
-   * \returns the latest innovation covariance matrix S
+   * \returns the current innovation covariance matrix S
   */
   const arma::mat& getInnovationCovariance() const { return S_; }
 
@@ -249,32 +246,32 @@ public:
    *
    * Kalman gain is calculated during correction step K = P * trans(C) * inv(S).
    *
-   * \returns the latest Kalman gain K
+   * \returns the current Kalman gain K
   */
   const arma::mat& getKalmanGain() const { return K_; }
 
 
   /** \brief Input vector getter
    *
-   * \returns the latest input vector u
+   * \returns the current input vector u
   */
   const arma::vec& getInput() const { return u_; }
 
   /** \brief Output vector getter
    *
-   * \returns the latest output vector y
+   * \returns the current output vector y
   */
   const arma::vec& getOutput() const { return y_; }
 
   /** \brief Predicted state vector getter
    *
-   * \returns the latest predicted state vector q_pred
+   * \returns the current predicted state vector q_pred
   */
   const arma::vec& getPrediction() const { return q_pred_; }
 
   /** \brief Estimated state vector getter
    *
-   * \returns the latest estimated state vector q_est
+   * \returns the current estimated state vector q_est
   */
   const arma::vec& getEstimate() const { return q_est_; }
 
@@ -297,7 +294,7 @@ public:
    * \param u is the input vector
    * \sa setInput(), predictState()
   */
-  virtual void predictState(const arma::vec& u) {
+  void predictStateU(const arma::vec& u) {
     setInput(u);
     predictState();
   }
@@ -324,7 +321,7 @@ public:
    * \param y is the output vector
    * \sa setOutput(), correctState()
   */
-  void correctState(const arma::vec& y) {
+  void correctStateY(const arma::vec& y) {
     setOutput(y);
     correctState();
   }
@@ -345,7 +342,7 @@ public:
    * Sets the new values of input and output vectors and executes both
    * prediction and correction steps.
    *
-   * \param u is the input vector
+   * \param u is the input (controls) vector
    * \param y is the output (measurement) vector
    * \sa setInput(), setOutput(), predictState(), correctState()
   */
@@ -355,16 +352,18 @@ public:
     updateState();
   }
 
+
 protected:
+
   /** \brief This class cannot be instantiated without providing dimensions. */
   KalmanFilter() {}
 
   // Dimensions:
-  uint l_;            /**< \brief Dimension of input vector (number of control
+  size_t l_;            /**< \brief Dimension of input vector (number of control
                            signals). Can be zero for autonomous systems. */
-  uint m_;            /**< \brief Dimension of output vector (number of measured
-                           values) */
-  uint n_;            /**< \brief Dimension of state vector */
+  size_t m_;            /**< \brief Dimension of output vector (number of
+                           measured values). Can be zero for prediction only. */
+  size_t n_;            /**< \brief Dimension of state vector */
 
   // System matrices:
   arma::mat A_;       /**< \brief State matrix with dimensions n x n */

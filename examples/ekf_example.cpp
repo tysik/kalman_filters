@@ -7,7 +7,8 @@
  * The state of the system is q = (phi, omega) (angle and angular velocity):
  * n = 2
  * The input of the system is u = (a) (linear acceleration pointing up): l = 1
- * The output of the system is y = (a, b) (position of the
+ * The output of the system is y = (a, b) (position of the pendulum end-point in
+ * a local coordinate frame.
  */
 
 #include <iostream>
@@ -38,7 +39,7 @@ const double d = 1.0;   // Length in m
 const double b = 0.5;   // Friction coef. in 1/s
 
 // Process function as standard function
-vec processFunction(vec q, vec u) {
+vec processFunction(const vec& q, const vec& u) {
   vec q_pred = vec(2).zeros();
 
   q_pred(0) = q(0) + q(1) * system_dt;
@@ -49,12 +50,12 @@ vec processFunction(vec q, vec u) {
 }
 
 // Output function as lambda
-auto outputFunction = [](vec q)->vec{
+auto outputFunction = [](const vec& q)->vec{
   return {d * sin(q(0)), d * cos(q(0))}; };
 
 // Process Jacobian as member function
 struct ProcessJacobian {
-  mat processJacobian(vec q, vec u) {
+  mat processJacobian(const vec& q, const vec& u) {
     double a11 = 1.0;
     double a12 = system_dt;
     double a21 = (g + u(0)) * cos(q(0)) * system_dt / d;
@@ -67,7 +68,7 @@ struct ProcessJacobian {
 
 // Output Jacobian as function object
 struct outputJacobian {
-  mat operator()(vec q) const {
+  mat operator()(const vec& q) const {
     return { { d * cos(q(0)), 0.0},
              {-d * sin(q(0)), 0.0} };
   }

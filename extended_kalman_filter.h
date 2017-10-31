@@ -34,7 +34,7 @@ public:
    * \param dim_out is the dimension of output vector (number of measurements)
    * \param dim_state is the dimension of state vector
   */
-  ExtendedKalmanFilter(uint dim_in, uint dim_out, uint dim_state) :
+  ExtendedKalmanFilter(size_t dim_in, size_t dim_out, size_t dim_state) :
     KalmanFilter(dim_in, dim_out, dim_state)
   {}
 
@@ -70,37 +70,43 @@ public:
 
   /** \brief Process function setter
    *
-   * \param processFunction is the pointer to the process function
-   * \sa processFunction_()
+   * \param processFunction is a callable object (e.g. function or lambda)
+   *                        representing the process function
+   * \sa processFunction_
   */
-  void setProcessFunction(std::function<arma::vec(arma::vec q, arma::vec u)> processFunction) {
+  void setProcessFunction(std::function<arma::vec(const arma::vec& q,
+                                                  const arma::vec& u)> processFunction) {
     processFunction_ = processFunction;
   }
 
   /** \brief Output function setter
    *
-   * \param outputFunction is the pointer to the output function
-   * \sa outputFunction_()
+   * \param outputFunction is a callable object (e.g. function or lambda)
+   *                       representing the output function
+   * \sa outputFunction_
   */
-  void setOutputFunction(std::function<arma::vec(arma::vec q)> outputFunction) {
+  void setOutputFunction(std::function<arma::vec(const arma::vec& q)> outputFunction) {
     outputFunction_ = outputFunction;
   }
 
   /** \brief Process Jacobian setter
    *
-   * \param processJacobian is the pointer to the process Jacobian function
-   * \sa processJacobian_()
+   * \param processJacobian is a callable object (e.g. function or lambda)
+   *                        representing the process Jacobian function
+   * \sa processJacobian_
   */
-  void setProcessJacobian(std::function<arma::mat(arma::vec q, arma::vec u)> processJacobian) {
+  void setProcessJacobian(std::function<arma::mat(const arma::vec& q,
+                                                  const arma::vec& u)> processJacobian) {
     processJacobian_ = processJacobian;
   }
 
   /** \brief Output Jacobian setter
    *
-   * \param outputJacobian is the pointer to the output Jacobian function
-   * \sa outputJacobian_()
+   * \param outputJacobian is a callable object (e.g. function or lambda)
+   *                        representing the output Jacobian function
+   * \sa outputJacobian_
   */
-  void setOutputJacobian(std::function<arma::mat(arma::vec q)> outputJacobian) {
+  void setOutputJacobian(std::function<arma::mat(const arma::vec& q)> outputJacobian) {
     outputJacobian_ = outputJacobian;
   }
 
@@ -111,26 +117,12 @@ public:
     * state estimate and input. Updates the process Jacobian and estimate error
     * covariance matrix.
     *
-    * \sa processFunction(), processJacobian_()
+    * \sa processFunction_, processJacobian_
    */
   virtual void predictState() {
     q_pred_ = processFunction_(q_est_, u_);
     A_ = processJacobian_(q_est_, u_);
     P_ = A_ * P_ * trans(A_) + Q_;
-  }
-
-  /** \brief Performs the EKF prediction step given the input vector
-   *
-   * Sets provided input vector, calculates the state evolution for the current
-   * time step based on previous state estimate and input. Updates the process
-   * Jacobian and estimate error covariance matrix.
-   *
-   * \param u is the input vector with dimension l
-   * \sa KalmanFilter::setInput(), processFunction_(), processJacobian_()
-  */
-  virtual void predictState(const arma::vec& u) {
-    setInput(u);
-    predictState();
   }
 
   /** \brief Performs the EKF correction step
@@ -139,7 +131,7 @@ public:
    * state estimate, and updates estimate error covariance as well as innovation
    * covariance.
    *
-   * \sa outputFunction_(), outputJacobian_()
+   * \sa outputFunction_, outputJacobian_
   */
   virtual void correctState() {
     C_ = outputJacobian_(q_est_);
@@ -149,20 +141,9 @@ public:
     P_ = (I_ - K_ * C_) * P_;
   }
 
-  /** \brief Performs the EKF correction step given the output vector
-   *
-   * Sets provided output vector, calculates the new Kalman gain, corrects the
-   * state prediction to obtain new state estimate, and updates estimate error
-   * covariance as well as innovation covariance.
-   *
-   * \sa KalmanFilter::setOutput(), outputFunction_(), outputJacobian_()
-  */
-  virtual void correctState(const arma::vec& y) {
-    setOutput(y);
-    correctState();
-  }
 
 protected:
+
   /** \brief This class cannot be instantiated without providing dimensions. */
   ExtendedKalmanFilter() {}
 
@@ -171,7 +152,7 @@ protected:
    * Wrapper of a function which returns arma::vec of dimension n, representing
    * the new state vector, and which takes two arguments of type arma::vec, with
    * dimensions n and l, respectively. The arguments of the function are
-   * previous state vector and input vector.
+   * the state vector and input vector, respectively.
    *
    * The process function f() describes the evolution of the discrete system
    * based on previous state and input vectors.
@@ -183,7 +164,7 @@ protected:
    *
    * \sa setProcessFunction()
   */
-  std::function<arma::vec(arma::vec q, arma::vec u)> processFunction_;
+  std::function<arma::vec(const arma::vec& q, const arma::vec& u)> processFunction_;
 
   /** \brief Output function
    *
@@ -200,7 +181,7 @@ protected:
    *
    * \sa setOutputFunction()
   */
-  std::function<arma::vec(arma::vec q)> outputFunction_;
+  std::function<arma::vec(const arma::vec& q)> outputFunction_;
 
   /** \brief Process Jacobian
    *
@@ -217,9 +198,9 @@ protected:
    *
    * \returns the Jacobian A of process function f()
    *
-   * \sa processFunction_(), setProcessFunction()
+   * \sa processFunction_, setProcessFunction()
   */
-  std::function<arma::mat(arma::vec q, arma::vec u)> processJacobian_;
+  std::function<arma::mat(const arma::vec& q, const arma::vec& u)> processJacobian_;
 
   /** \brief Output Jacobian
    *
@@ -234,9 +215,9 @@ protected:
    *
    * \returns the Jacobian C of output function h()
    *
-   * \sa outputFunction_(), setOutputFunction()
+   * \sa outputFunction_, setOutputFunction()
   */
-  std::function<arma::mat(arma::vec q)> outputJacobian_;
+  std::function<arma::mat(const arma::vec& q)> outputJacobian_;
 };
 
 } // namespace kf
