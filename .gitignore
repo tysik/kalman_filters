@@ -3,4 +3,5 @@
 html/
 latex/
 doc/
+build/
 build-KalmanFilters-Desktop-Default/
