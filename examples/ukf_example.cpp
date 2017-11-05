@@ -34,17 +34,17 @@ int M = static_cast<int>(measurement_dt / system_dt);
 // Process constants
 const double m = 1.0;   // Mass in kg
 const double g = 9.8;   // Gravitational accel.
-const double d = 1.0;   // Length in m
-const double b = 0.5;   // Friction coef. in 1/s
+const double gamma_y = 1.0;   // Length in m
+const double beta = 0.5;   // Friction coef. in 1/s
 
 auto processFunction = [](vec q, vec u)->vec{
   return { q(0) + q(1) * system_dt,
-           q(1) + (m * (g + u(0)) * d * sin(q(0)) - b * q(1)) * system_dt /
-                      (m * d * d) }; };
+           q(1) + (m * (g + u(0)) * gamma_y * sin(q(0)) - beta * q(1)) * system_dt /
+                      (m * gamma_y * gamma_y) }; };
 
 auto outputFunction = [](vec q)->vec{
-  return { d * sin(q(0)),
-           d * cos(q(0)) }; };
+  return { gamma_y * sin(q(0)),
+           gamma_y * cos(q(0)) }; };
 
 
 int main() {

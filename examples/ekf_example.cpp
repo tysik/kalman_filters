@@ -35,31 +35,31 @@ int M = static_cast<int>(measurement_dt / system_dt);
 // Process constants
 const double m = 1.0;   // Mass in kg
 const double g = 9.8;   // Gravitational accel.
-const double d = 1.0;   // Length in m
-const double b = 0.5;   // Friction coef. in 1/s
+const double gamma_y = 1.0;   // Length in m
+const double beta = 0.5;   // Friction coef. in 1/s
 
 // Process function as standard function
 vec processFunction(const vec& q, const vec& u) {
   vec q_pred = vec(2).zeros();
 
   q_pred(0) = q(0) + q(1) * system_dt;
-  q_pred(1) = q(1) + (m * (g + u(0)) * d * sin(q(0)) - b * q(1)) * system_dt /
-              (m * d * d);
+  q_pred(1) = q(1) + (m * (g + u(0)) * gamma_y * sin(q(0)) - beta * q(1)) * system_dt /
+              (m * gamma_y * gamma_y);
 
   return q_pred;
 }
 
 // Output function as lambda
 auto outputFunction = [](const vec& q)->vec{
-  return {d * sin(q(0)), d * cos(q(0))}; };
+  return {gamma_y * sin(q(0)), gamma_y * cos(q(0))}; };
 
 // Process Jacobian as member function
 struct ProcessJacobian {
   mat processJacobian(const vec& q, const vec& u) {
     double a11 = 1.0;
     double a12 = system_dt;
-    double a21 = (g + u(0)) * cos(q(0)) * system_dt / d;
-    double a22 = 1.0 - b * system_dt / (m * d * d);
+    double a21 = (g + u(0)) * cos(q(0)) * system_dt / gamma_y;
+    double a22 = 1.0 - beta * system_dt / (m * gamma_y * gamma_y);
 
     return { {a11, a12},
              {a21, a22} };
@@ -69,8 +69,8 @@ struct ProcessJacobian {
 // Output Jacobian as function object
 struct outputJacobian {
   mat operator()(const vec& q) const {
-    return { { d * cos(q(0)), 0.0},
-             {-d * sin(q(0)), 0.0} };
+    return { { gamma_y * cos(q(0)), 0.0},
+             {-gamma_y * sin(q(0)), 0.0} };
   }
 };
 

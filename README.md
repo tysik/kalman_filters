@@ -15,10 +15,9 @@ We might also want to set some initial values for input, output, and predicted/e
 
 Once the system matrices and vectors are set it is time to tune the KF. The tunable parameters of KF are the process and output covariance matrices: `Q` and `R`. Once their values are obtained, we can set them with functions `setProcessCovariance(Q)` and `setOutputCovariance(R)`.
 
-Now it's time for action. If the measurements come with the same rate as the system loop it is recommended to use function `updateState(u, y)` with most recent input signal `u` and output signal `y`. If the rates are different we can separately use functions `predictState()` (`predictState(u)`) and `correctState()` (`correctState(y)`) which will perform the KF steps with previous or with given input/output.
+Now it's time for action. If the measurements come with the same rate as the system loop it is recommended to use function `updateState(u, y)` with most recent input signal `u` and output signal `y`. If the rates are different we can separately use functions `predictState()` (`predictStateU(u)`) and `correctState()` (`correctStateY(y)`) which will perform the KF steps with previous or with given input/output.
 
 To get the latest available state estimate use `getEstimate()` function.
-
 
 ### Kalman filter example
 
@@ -110,7 +109,7 @@ Use `updateState(u, y)` function to perform the magic of UKF.
 
 ### Unscented Kalman filter example
 
-...
+TBC
 
 Author:
 _Mateusz Przybyła_
