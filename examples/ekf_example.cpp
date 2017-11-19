@@ -35,31 +35,31 @@ int M = static_cast<int>(measurement_dt / system_dt);
 // Process constants
 const double m = 1.0;   // Mass in kg
 const double g = 9.8;   // Gravitational accel.
-const double gamma_y = 1.0;   // Length in m
-const double beta = 0.5;   // Friction coef. in 1/s
+const double d = 1.0;   // Length in m
+const double b = 0.5;   // Friction coef. in 1/s
 
 // Process function as standard function
 vec processFunction(const vec& q, const vec& u) {
   vec q_pred = vec(2).zeros();
 
   q_pred(0) = q(0) + q(1) * system_dt;
-  q_pred(1) = q(1) + (m * (g + u(0)) * gamma_y * sin(q(0)) - beta * q(1)) * system_dt /
-              (m * gamma_y * gamma_y);
+  q_pred(1) = q(1) + (m * (u(0) - g) * d * sin(q(0)) - b * q(1)) * system_dt /
+              (m * d * d);
 
   return q_pred;
 }
 
 // Output function as lambda
 auto outputFunction = [](const vec& q)->vec{
-  return {gamma_y * sin(q(0)), gamma_y * cos(q(0))}; };
+  return {d * sin(q(0)), d * cos(q(0))}; };
 
 // Process Jacobian as member function
 struct ProcessJacobian {
   mat processJacobian(const vec& q, const vec& u) {
     double a11 = 1.0;
     double a12 = system_dt;
-    double a21 = (g + u(0)) * cos(q(0)) * system_dt / gamma_y;
-    double a22 = 1.0 - beta * system_dt / (m * gamma_y * gamma_y);
+    double a21 = (u(0) - g) * cos(q(0)) * system_dt / d;
+    double a22 = 1.0 - b * system_dt / (m * d * d);
 
     return { {a11, a12},
              {a21, a22} };
@@ -69,8 +69,8 @@ struct ProcessJacobian {
 // Output Jacobian as function object
 struct outputJacobian {
   mat operator()(const vec& q) const {
-    return { { gamma_y * cos(q(0)), 0.0},
-             {-gamma_y * sin(q(0)), 0.0} };
+    return { { d * cos(q(0)), 0.0},
+             {-d * sin(q(0)), 0.0} };
   }
 };
 
@@ -126,7 +126,7 @@ int main() {
   // Initial values (unknown by EKF)
   time[0] = 0.0;
 
-  true_ang[0] = 1.0;
+  true_ang[0] = 1.5;
   true_vel[0] = 0.0;
   true_acc[0] = 0.0;
 
@@ -156,8 +156,6 @@ int main() {
       measured_xy[i](0) += measurement_noise(generator);
       measured_xy[i](1) += measurement_noise(generator);
       measured_ang[i] = atan2(measured_xy[i](0), measured_xy[i](1));
-      if (measured_ang[i] < 0.0)
-        measured_ang[i] += 2.0 * M_PI;
     }
     else {
       measured_xy[i] = measured_xy[i - 1];

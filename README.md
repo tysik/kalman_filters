@@ -46,7 +46,7 @@ During simulation we update the KF at every sample with function `updateState(u,
 
 -----------------------
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/1482514/28871865-cfd7d42e-7786-11e7-9671-b49a67741ccd.png" alt="Exemplary use of KF."/>
+  <img src="https://user-images.githubusercontent.com/1482514/32991816-db107e7e-cd42-11e7-891e-ba8c41de23d3.png" alt="Exemplary use of KF."/>
   <br/>
   Fig. 2. Exemplary use of KF.
 </p>
@@ -90,7 +90,7 @@ Once the system equations are set, it is time to tune the parameters. As in the 
 
 -----------------------
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/1482514/28871961-3c53bf14-7787-11e7-832b-8425597d2691.png" alt="Exemplary use of EKF."/>
+  <img src="https://user-images.githubusercontent.com/1482514/32991815-daef107c-cd42-11e7-97bb-1411defb1f9e.png" alt="Exemplary use of EKF."/>
   <br/>
   Fig. 4. Exemplary use of EKF.
 </p>
@@ -109,7 +109,16 @@ Use `updateState(u, y)` function to perform the magic of UKF.
 
 ### Unscented Kalman filter example
 
-TBC
+For comparison, the UKF was applied to the pendulum system described above. The results can be seen on Fig. 5. The plots are nearly identical but the need to calculate Jacobians manually was omitted.
+
+-----------------------
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/1482514/32991817-db343a12-cd42-11e7-94a8-8d1089f95a09.png" alt="Exemplary use of UKF."/>
+  <br/>
+  Fig. 5. Exemplary use of UKF.
+</p>
+
+-----------------------
 
 Author:
 _Mateusz Przybyła_

@@ -34,17 +34,18 @@ int M = static_cast<int>(measurement_dt / system_dt);
 // Process constants
 const double m = 1.0;   // Mass in kg
 const double g = 9.8;   // Gravitational accel.
-const double gamma_y = 1.0;   // Length in m
-const double beta = 0.5;   // Friction coef. in 1/s
+const double d = 1.0;   // Length in m
+const double b = 0.5;   // Friction coef. in 1/s
 
 auto processFunction = [](vec q, vec u)->vec{
   return { q(0) + q(1) * system_dt,
-           q(1) + (m * (g + u(0)) * gamma_y * sin(q(0)) - beta * q(1)) * system_dt /
-                      (m * gamma_y * gamma_y) }; };
+           q(1) + (m * (u(0) - g) * d * sin(q(0)) - b * q(1)) * system_dt /
+                      (m * d * d) };
+};
 
 auto outputFunction = [](vec q)->vec{
-  return { gamma_y * sin(q(0)),
-           gamma_y * cos(q(0)) }; };
+  return { d * sin(q(0)), d * cos(q(0)) };
+};
 
 
 int main() {
@@ -88,7 +89,7 @@ int main() {
   // Initial values (unknown by UKF)
   time[0] = 0.0;
 
-  true_ang[0] = 1.0;
+  true_ang[0] = 1.5;
   true_vel[0] = 0.0;
   true_acc[0] = 0.0;
 
@@ -118,8 +119,6 @@ int main() {
       measured_xy[i](0) += measurement_noise(generator);
       measured_xy[i](1) += measurement_noise(generator);
       measured_ang[i] = atan2(measured_xy[i](0), measured_xy[i](1));
-      if (measured_ang[i] < 0.0)
-        measured_ang[i] += 2.0 * M_PI;
     }
     else {
       measured_xy[i] = measured_xy[i - 1];
