@@ -303,7 +303,7 @@ public:
    * \param u is the input vector
    * \sa setInput(), predictState()
   */
-  void predictStateU(const arma::vec& u) {
+  void predictState(const arma::vec& u) {
     setInput(u);
     predictState();
   }
@@ -330,7 +330,7 @@ public:
    * \param y is the output vector
    * \sa setOutput(), correctState()
   */
-  void correctStateY(const arma::vec& y) {
+  void correctState(const arma::vec& y) {
     setOutput(y);
     correctState();
   }

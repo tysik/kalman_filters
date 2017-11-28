@@ -22,6 +22,9 @@ class UnscentedKalmanFilter : public ExtendedKalmanFilter
 {
 public:
 
+  using KalmanFilter::predictState;
+  using KalmanFilter::correctState;
+
   /** \brief Constructor with given dimensions
    *
    * Initializes all vectors and matrices to have correct dimensions. State

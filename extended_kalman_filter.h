@@ -24,6 +24,9 @@ class ExtendedKalmanFilter : public KalmanFilter
 {
 public:
 
+  using KalmanFilter::predictState;
+  using KalmanFilter::correctState;
+
   /** \brief Constructor with given dimensions
    *
    * Initializes all vectors and matrices to have correct dimensions. State
@@ -124,6 +127,7 @@ public:
     A_ = processJacobian_(q_est_, u_);
     P_ = A_ * P_ * trans(A_) + Q_;
   }
+
 
   /** \brief Performs the EKF correction step
    *
